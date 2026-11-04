@@ -13,7 +13,7 @@ Update your own row at every check-in.
 |---|---|---|---|---|---|
 | Day 1 | Aditya |  | |  |  |
 | Day 1 | B Chaitanya |Create folder backend and add files and then define starting four methods   |In progress | | |
-| Day 1 | Pavan Kumar |  |  |  |  |
+| Day 1 | Pavan Kumar | working on endpoints E8, E9, E10 | in progress |  |  |
 | Day 2 | B Chaitanya |  |  | |  |
 | Day 2 | Aditya | | |  |  |
 | Day 2 | Pavan Kumar |  |  |  ||
