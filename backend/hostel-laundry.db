@@ -1,0 +1,22 @@
+SQLite format 3@  .O}
+,=,��tablerunsrunsCREATE TABLE runs (
+	run_id INTEGER NOT NULL, 
+	machine_id INTEGER, 
+	roll_no VARCHAR, 
+	started_at DATETIME, 
+	ends_at DATETIME, 
+	collected_at DATETIME, 
+	status VARCHAR, 
+	PRIMARY KEY (run_id), 
+	FOREIGN KEY(machine_id) REFERENCES machines (id)
+)�@�StablemachinesmachinesCREATE TABLE machines (
+	id INTEGER NOT NULL, 
+	name VARCHAR, 
+	block VARCHAR, 
+	kind VARCHAR, 
+	cycles_minutes INTEGER, 
+	in_service INTEGER, 
+	PRIMARY KEY (id)
+)
++���uO+"3Fresh fold Laundry dwasher($7Full service Laundry dwasher!3	High N Dry Laundry aDryer# 1Wash spot Laundry cDryer!1	Spin city Laundry awasher!1klen Laundry worksbwasher
+��vI,AAU25ug0082026-11-05 22:40:14.509389+	AAU25ug0162026-11-05 22:26:05.453187,AAU25ug0122026-11-05 22:25:51.402786,AAU25ug0102026-11-05 22:25:41.593125,AAU25ug0082026-11-05 22:25:06.075122
