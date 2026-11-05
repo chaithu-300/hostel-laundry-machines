@@ -37,3 +37,16 @@ Fill in the method and path from your PRD's endpoint table. Status: ✅ done · 
 | E8 | get/active_roll_no/{roll_no} | ✅ | ✅ | ⬜ |   |
 | E9 | get/machine/attention | ✅ | ✅ | ⬜ |   |
 | E10 | get/machine/today_usage_status/{block} | ✅ | ✅ | ⬜ |   |
+
+
+## File Structure 
+
+```text
+hostel-laundry-machines/
+└── backend/
+    ├── __pycache__/
+    ├── .venv/
+    ├── functions.py
+    ├── hostel_laundry.db
+    └── main.py
+```                
