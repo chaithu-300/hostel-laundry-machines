@@ -27,93 +27,27 @@ class runs(Base):
     status = Column(String) #Running, Completed, Collected
 
 Base.metadata.create_all(engine)
+#E8
+def get_active_runs_by_rollnumber(roll_number):
 
-def add_machines(name, block, kind, cycles_minutes, in_service):
     session = Session(engine)
-    new_machine = machines(
-        name = name,
-        block = block,
-        kind = kind,
-        cycles_minutes = cycles_minutes,
-        in_service = in_service
-    )
-    session.add(new_machine)
-    session.commit()
+    active_runs = session.query(runs).filter(
+        runs.roll_no == roll_number.strip(),
+        runs.collected_at == None
+    ).all()
 
-    response = {
-        "id": new_machine.id,
-        "name": new_machine.name,
-        "block": new_machine.block,
-        "kind": new_machine.kind,
-        "cycles_minutes": new_machine.cycles_minutes,
-        "in_service": new_machine.in_service
-    }
-    session.close()
-    return response
-
-def get_machines_by_id(machine_id):
-    session = Session(engine)
-    machine = session.get(machines, machine_id)
-    if machine is None:
-        raise HTTPException(status_code = 404, detail = "Can't find machine with the given ID")
-    response = {
-        "id": machine.id,
-        "name": machine.name,
-        "block": machine.block,
-        "kind": machine.kind,
-        "cycles_minutes": machine.cycles_minutes,
-        "in_service": machine.in_service
-    }
-    session.close()
-    return response
-
-def get_machines(block = False, kind = False):
-    session = Session(engine)
-    Machines = session.query(machines).all()
     response = []
-    for Machine in Machines:
-        temp_Machine = {
-            "id": Machine.id,
-            "name": Machine.name,
-            "block": Machine.block,
-            "kind": Machine.kind,
-            "cycles_minutes": Machine.cycles_minutes,
-            "in_service": Machine.in_service
-        }
-        response.append(temp_Machine)
+    for run in active_runs:
+        response.append({
+            "id": run.run_id,
+            "machine_id": run.machine_id,
+            "roll_no": run.roll_no,
+            "status": run.status,
+            "ends_at": run.ends_at
+        })
     session.close()
     return response
-
-def update_machines(in_service, machine_id):
-    session = Session(engine)
-    machine = session.query(machines).filter(machines.id == machine_id)
-    if machine is None:
-        raise HTTPException(status_code = 404, detail = "Can't find machine with the given ID")
-    machine.in_service = in_service
-    session.commit()
-    response = {
-        "Machine status updated successfully"
-    }
-    session.close()
-    return response 
-
-def get_Active_Runs_By_RollNumber(roll_no, status = "Running"):
-    session = Session(engine)
-    run = session.get(runs, roll_no)
-    if run is None:
-        raise HTTPException(status_code = 404, detail = "Can't find any active runs for the given roll number")
-    response = {
-        "run_id": run.run_id,
-        "machine_id": run.machine_id,
-        "roll_no": run.roll_no,
-        "started_at": run.started_at,
-        "ends_at": run.ends_at,
-        "collected_at": run.collected_at,
-        "status": run.status
-    }
-    session.close()
-    return response 
-
+#E9
 def get_machines_needing_attention():
     session = Session(engine)
     Machines = session.query(machines).all()
@@ -140,7 +74,7 @@ def get_machines_needing_attention():
             response.append(temp_Machine)
     session.close()
     return response
-
+#E10
 def get_todays_usage(block):
     session = Session(engine)
     today_time = datetime.now().strftime("%Y-%m-%d") 
@@ -150,7 +84,7 @@ def get_todays_usage(block):
         func.count(runs.run_id)).join(runs, machines.id == runs.machine_id).filter(machines.block == block,runs.started_at.like(f"{today_time}%")
     ).group_by(
         machines.kind
-    ).all()
+    ).all() 
     washer_count = 0
     dryer_count = 0
     for row in results:
@@ -168,8 +102,6 @@ def get_todays_usage(block):
     
     session.close()
     return response
-
-
     
     
            
