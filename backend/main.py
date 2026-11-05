@@ -1,0 +1,46 @@
+from fastapi import FastAPI, HTTPException
+import functions
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+@app.get("/")
+def hello():
+    return {"message": "Laundry-Hostel-Machines running successfully"}
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = ["http://localhost:5174", "http://127.0.0.1:5174"],
+    allow_methods = ["*"],
+    allow_headers = ["*"],
+)
+
+@app.post("/add_machine")
+def add_machine(name, block, kind, cycles_minutes, in_service):
+    return functions.add_machines(name, block, kind, cycles_minutes, in_service)
+
+@app.get("/get_machines by id/{machine_id}")
+def get_machines_by_id(machine_id):
+    return functions.get_machines_by_id(machine_id)
+
+@app.get("/get_all_machines/")
+def get_all_machines(block= False, kind = False):
+    return functions.get_machines(block, kind)
+
+@app.patch("/update_machine/")
+def update_machine(in_service, machine_id):
+    return functions.update_machines(in_service, machine_id)
+
+@app.post("/machine/roll_no")
+def start_with_roll_no(roll_no, machine_id):
+    return functions.start_with_roll_no(roll_no, machine_id)
+
+@app.post("/machine/collect_roll_no")
+def collect_by_roll_no(roll_no, machine_id):
+    return functions.collect_by_roll_no(roll_no, machine_id)
+
+@app.patch("/machine/not_collected_roll_no")
+def not_collected(roll_no, machine_id):
+    return functions.clothes_not_collected(roll_no, machine_id)
+
+
