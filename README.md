@@ -11,15 +11,15 @@ Update your own row at every check-in.
 
 | Day | Partner | What will you do? | Completed? | What are you going to work on next? | Stuck on? |
 |---|---|---|---|---|---|
-| Day 1 | Aditya | working ON E5,E6,E7 | IN Progress | NO |  |
+| Day 1 | Aditya | working ON E5,E6,E7 | IN Progress | |  NO |
 | Day 1 | B Chaitanya |Create folder backend and add files and then define starting four methods   |completed |checking rules in the doc |No |
 | Day 1 | Pavan Kumar |  |  |  |  |
 | Day 2 | B Chaitanya | Start working on frontend define main.jsx, index.html and App.jsx | In progress | complete App.jsx and machines.jsx| No |
-| Day 2 | Aditya | working on E5,E6,E7 and HTTPException and error handling| IN Progress| NO |  |
-| Day 2 | Pavan Kumar | working on E8,E9,E10 | IN Progess | Yes ||
-| Day 3 | B Chaitanya | Working on components machines.jsx and App.jsx | In progress | YES | |
-| Day 3 | Aditya | Working on components My Laundry and APP.jsx | IN Progress | Yes | |
-| Day 3 | Pavan Kumar | working on  E8,E9,E10  HTTPException and error handling | IN Progress | Yes | |
+| Day 2 | Aditya | working on E5,E6,E7 and HTTPException and error handling| IN Progress| |  NO |
+| Day 2 | Pavan Kumar | working on E8,E9,E10 | IN Progess |  |Yes|
+| Day 3 | B Chaitanya | Working on components machines.jsx and App.jsx | In progress |  | YES |
+| Day 3 | Aditya | Working on components My Laundry and APP.jsx | IN Progress |  | Yes|
+| Day 3 | Pavan Kumar | working on  E8,E9,E10  HTTPException and error handling | IN Progress |  | Yes |
 
 ## 2. Endpoint tracker
 
