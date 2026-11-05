@@ -18,7 +18,7 @@ Update your own row at every check-in.
 | Day 2 | Aditya | working on E5,E6,E7 and HTTPException and error handling| I
 N Progress|  |  |
 | Day 2 | Pavan Kumar |  |  |  ||
-| Day 3 | B Chaitanya | Working on components machines.jsx and App.jsx | In progress | Yes | |
+| Day 3 | B Chaitanya | Working on components machines.jsx and App.jsx | In progress | Prepare for tomorrow presentation |Yes |
 | Day 3 | Aditya | Working on components My Laundry and APP.jsx | IN Progress |  | |
 | Day 3 | Pavan Kumar | |  | | |
 
