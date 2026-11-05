@@ -14,11 +14,11 @@ Update your own row at every check-in.
 | Day 1 | Aditya | working ON E5,E6,E7 | IN Progress |  |  |
 | Day 1 | B Chaitanya |Create folder backend and add files and then define starting four methods   |completed |checking rules in the doc |No |
 | Day 1 | Pavan Kumar |  |  |  |  |
-| Day 2 | B Chaitanya | Start working on frontend define main.jsx, index.html and App.jsx | In progress | complete App.jsx and machines.jsx| No |
+| Day 2 | B Chaitanya | Start working on frontend define main.jsx, index.html and App.jsx | In progress | complete App.jsx and machines.jsx| Yes |
 | Day 2 | Aditya | working on E5,E6,E7 and HTTPException and error handling| I
 N Progress|  |  |
 | Day 2 | Pavan Kumar |  |  |  ||
-| Day 3 | B Chaitanya | Working on components machines.jsx and App.jsx | In progress |  | |
+| Day 3 | B Chaitanya | Working on components machines.jsx and App.jsx | In progress | Yes | |
 | Day 3 | Aditya | Working on components My Laundry and APP.jsx | IN Progress |  | |
 | Day 3 | Pavan Kumar | |  | | |
 
