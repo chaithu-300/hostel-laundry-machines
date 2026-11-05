@@ -19,7 +19,7 @@ Update your own row at every check-in.
 | Day 2 | Pavan Kumar | working on E8,E9,E10 | IN Progess | Yes ||
 | Day 3 | B Chaitanya | Working on components machines.jsx and App.jsx | In progress | YES | |
 | Day 3 | Aditya | Working on components My Laundry and APP.jsx | IN Progress | Yes | |
-| Day 3 | Pavan Kumar | working on  E8,E9,E10  HTTPException and error handling | YES | | |
+| Day 3 | Pavan Kumar | working on  E8,E9,E10  HTTPException and error handling | IN Progress | Yes | |
 
 ## 2. Endpoint tracker
 
