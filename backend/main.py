@@ -15,7 +15,7 @@ app.add_middleware(
 
 
 @app.get("/get_active_runs_by_rollnumber/{roll_number}")
-def get_active_runs_endpoint(roll_number):
+def get_active_runs(roll_number):
 
     result = functions.get_active_runs_by_rollnumber(roll_number)
 
