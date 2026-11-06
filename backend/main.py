@@ -19,14 +19,14 @@ def add_machine(name, block, kind, cycles_minutes, in_service):
     return functions.add_machines(name, block, kind, cycles_minutes, in_service)
 
 @app.get("/machines_by_id/{machine_id}")
-def get_single_machine_endpoint(machine_id):
+def get_single_machine(machine_id):
     machine = functions.get_machine_by_id(machine_id)
     if machine is None:
         raise HTTPException(status_code = 404, detail = "Machine not found")
     return functions.get_machine_by_id(machine_id)
 
 @app.get("/machines")
-def get_all_machines_endpoint(block = None, kind = None):
+def get_all_machines(block = None, kind = None):
     if block and block not in ["a", "b", "c", "d"]:
         raise HTTPException(status_code=422, detail="Block must be one of: a, b, c, d")
     if kind and kind not in ["washer", "dryer"]:
