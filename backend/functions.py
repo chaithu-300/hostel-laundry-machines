@@ -1,11 +1,29 @@
-from datetime import datetime,timedelta 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, create_engine,func
-from sqlalchemy.orm import Session, declarative_base
-from fastapi import FastAPI, HTTPException
+from datetime import datetime, timedelta
+from platform import machine
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, create_engine, func #pyright: ignore
+from sqlalchemy.orm import Session, declarative_base #pyright: ignore
+from fastapi import FastAPI, HTTPException #pyright: ignore
+import jwt #pyright: ignore
+from argon2 import PasswordHasher #pyright: ignore
+from argon2.exceptions import VerifyMismatchError #pyright: ignore
+
+ph = PasswordHasher()
 
 DB_PATH = "hostel-laundry.db"
 engine = create_engine(f"sqlite:///{DB_PATH}")
 Base = declarative_base()
+
+ACCESS_TOKEN_EXPIRY = 15 #mins
+REFRESH_TOKEN_EXPIRY = 7 * 24 * 60
+SECRET_KEY = "SECRET123"
+ALGORITHM = "HS256"
+
+class User(Base):
+    __tablename__ = "Users"
+
+    user_id = Column(Integer, primary_key = True)
+    user_name = Column(String)
+    password = Column(String)
 
 class machines(Base):
     __tablename__ = "machines"
@@ -28,7 +46,58 @@ class runs(Base):
 
 Base.metadata.create_all(engine)
 
-def add_machines(name, block, kind, cycles_minutes, in_service):
+def register_user(user_name, password):
+    session = Session(engine)
+    user_exists = session.query(User).filter_by(user_name=user_name).first()
+    if user_exists is not None:
+        session.close()
+        return False
+    session.add(User(user_name=user_name, password = ph.hash(password)))
+    session.commit()
+    session.close()
+    return True
+
+def verify_login(username, password):
+    session = Session(engine)
+    user = session.query(User).filter_by(user_name = username).first()
+    if user is None:
+        session.close()
+        return False
+    try:
+        ph.verify(user.password, password)
+    except VerifyMismatchError:
+        session.close()
+        return False
+    session.close()
+    access_token = create_token(username=username, token_type = "access")
+    refresh_token = create_token(username=username, token_type = "refresh")
+    return {"access_token": access_token, "refresh_token": refresh_token}
+
+def create_token(username, token_type):
+    time = ACCESS_TOKEN_EXPIRY
+    if token_type == "refresh":
+        time = REFRESH_TOKEN_EXPIRY
+
+    payload = {
+        "username": username,
+        "token_type": token_type,
+        "exp": datetime.now() + timedelta(minutes = time)
+    }
+    token = jwt.encode(payload=payload, key = SECRET_KEY, algorithm = ALGORITHM)
+    return token
+
+def verify_token(token):
+    try:
+        payload = jwt.decode(jwt=token, key=SECRET_KEY, algorithms=[ALGORITHM])
+
+    except:
+        return False
+
+    if payload["token_type"] == "access":
+        return payload["username"]
+    return False
+
+def add_machines(name, block, kind, in_service,cycles_minutes):
     session = Session(engine)
     new_machine = machines(
         name = name,
@@ -51,68 +120,199 @@ def add_machines(name, block, kind, cycles_minutes, in_service):
     session.close()
     return response
 
-def get_machines_by_id(machine_id):
+def get_machine_by_id(machine_id):
     session = Session(engine)
-    machine = session.get(machines, machine_id)
+    machine = session.query(machines).filter(machines.id == machine_id).first()
     if machine is None:
-        raise HTTPException(status_code = 404, detail = "Can't find machine with the given ID")
+        session.close()
+        return None
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+    state = "free"
+    minutes_left = 0
+    
+    if machine.in_service == 0:
+        state = "out of order"
+    else:
+        active_run = session.query(runs).filter(
+            runs.machine_id == machine.id,
+            runs.status == "running",
+            runs.collected_at == None
+        ).first()
+        
+        if active_run:
+            if now_str < active_run.ends_at:
+                state = "running"
+                dt_now = datetime.strptime(now_str, "%Y-%m-%d %H:%M")
+                dt_ends = datetime.strptime(active_run.ends_at, "%Y-%m-%d %H:%M")
+                minutes_left = max(0, int((dt_ends - dt_now).total_seconds() / 60))
+            else:
+                state = "completed"
+    recent_history = session.query(runs).filter(
+        runs.machine_id == machine.id
+    ).order_by(runs.run_id).all()
+    runs_list = []
+    for r in recent_history:
+        runs_list.append({
+            "id": r.run_id,
+            "roll_no": r.roll_no,
+            "started_at": r.started_at,
+            "ends_at": r.ends_at,
+            "collected_at": r.collected_at,
+            "status": r.status
+        })
+        
     response = {
         "id": machine.id,
         "name": machine.name,
         "block": machine.block,
         "kind": machine.kind,
-        "cycles_minutes": machine.cycles_minutes,
-        "in_service": machine.in_service
+        "cycle_minutes": machine.cycles_minutes,
+        "in_service": machine.in_service,
+        "state": state,
+        "minutes_left": minutes_left,
+        "recent_runs": runs_list
     }
+    
     session.close()
     return response
 
-def get_machines(block = False, kind = False):
+def get_all_machines(block=None, kind=None):
     session = Session(engine)
-    Machines = session.query(machines).all()
+    query = session.query(machines)
+
+    if block:
+        query = query.filter(machines.block == block)
+
+    if kind:
+        query = query.filter(machines.kind == kind)
+
+    all_machines = query.all()
     response = []
-    for Machine in Machines:
-        temp_Machine = {
-            "id": Machine.id,
-            "name": Machine.name,
-            "block": Machine.block,
-            "kind": Machine.kind,
-            "cycles_minutes": Machine.cycles_minutes,
-            "in_service": Machine.in_service
-        }
-        response.append(temp_Machine)
+    now_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+    
+    for machine in all_machines:
+        state = "free"
+        minutes_left = 0
+        
+        if machine.in_service == 0:
+            state = "out of order"
+        else:
+            active_run = session.query(runs).filter(
+                runs.machine_id == machine.id,
+                runs.status == "running",
+                runs.collected_at == None
+            ).first()
+            
+            if active_run:
+                if now_time < active_run.ends_at:
+                    state = "running"
+                    dt_now = datetime.strptime(now_time, "%Y-%m-%d %H:%M")
+                    dt_ends = datetime.strptime(active_run.ends_at, "%Y-%m-%d %H:%M")
+                    minutes_left = max(0, int((dt_ends - dt_now).total_seconds() / 60))
+                else:
+                    state = "Completed"
+                    
+        response.append({
+            "id": machine.id,
+            "name": machine.name,
+            "block": machine.block,
+            "kind": machine.kind,
+            "cycle_minutes": machine.cycles_minutes,
+            "in_service": machine.in_service,
+            "state": state,
+            "minutes_left": minutes_left
+        })
+        
     session.close()
     return response
 
 def update_machines(in_service, machine_id):
     session = Session(engine)
-    machine = session.query(machines).filter(machines.id == machine_id)
-    if machine is None:
-        raise HTTPException(status_code = 404, detail = "Can't find machine with the given ID")
+    machine = session.query(machines).filter(machines.id == machine_id).first()
     machine.in_service = in_service
     session.commit()
     response = {
         "Machine status updated successfully"
     }
     session.close()
-    return response 
+    return response
 
-def get_Active_Runs_By_RollNumber(roll_no, status = "Running"):
+def start_with_roll_no(roll_no, machine_id): #Start a machine with a roll number. It starts now and ends after the machine's cycle minutes.
     session = Session(engine)
-    run = session.get(runs, roll_no)
-    if run is None:
-        raise HTTPException(status_code = 404, detail = "Can't find any active runs for the given roll number")
+    run = runs(roll_no=roll_no,machine_id=machine_id)
+    session.add(run)
+    machine = session.query(machines).filter(machines.id == machine_id).first()
+    if machine.in_service == 0:
+        raise HTTPException(status_code=400,detail="Machine is out of service")
+    session.commit()
+    
     response = {
-        "run_id": run.run_id,
-        "machine_id": run.machine_id,
-        "roll_no": run.roll_no,
-        "started_at": run.started_at,
-        "ends_at": run.ends_at,
-        "collected_at": run.collected_at,
-        "status": run.status
+        "id": run.machine_id,
+        "started_at" : run.started_at,
+        "ends_at" : run.ends_at
     }
     session.close()
-    return response 
+    return response
+
+def collect_by_roll_no(roll_no,machine_id):
+    session =Session(engine)
+    
+    run = runs(roll_no=roll_no,machine_id=machine_id)
+    session.add(run)
+    session.commit()
+    
+    response = {
+        "started_id":run.started_at,
+       "collected_at":run.collected_at,
+    }
+    session.close()
+    return response
+    
+def clothes_not_collected(roll_no,machine_id=None):
+    session=Session(engine)
+    
+    run = session.query(runs).filter(runs.roll_no == roll_no,runs.machine_id == machine_id).first()
+
+    if not run:
+        raise HTTPException(status_code = 404,detail="No matching run found")
+    if run.status != "Completed":
+        raise HTTPException(status_code=400,detail="Only completed runs can be cleared")
+
+    run.status = "Not collected"
+    
+    session.commit()
+    response ={
+        "roll_no": run.roll_no,
+        "machine_id":run.machine_id,
+        "collected_at" : run.collected_at,
+        "status":run.status,     
+    }
+    session.close()
+    return response
+
+def get_active_runs_by_rollnumber(roll_number):
+
+    session = Session(engine)
+
+    active_runs = session.query(runs).filter(
+        runs.roll_no == roll_number,
+        runs.collected_at == None
+    ).all()
+
+    response = []
+
+    for run in active_runs:
+        response.append({
+            "id": run.run_id,
+            "machine_id": run.machine_id,
+            "roll_no": run.roll_no,
+            "status": run.status,
+            "ends_at": run.ends_at
+        })
+
+    session.close()
+
+    return response
 
 def get_machines_needing_attention():
     session = Session(engine)
@@ -144,7 +344,6 @@ def get_machines_needing_attention():
 def get_todays_usage(block):
     session = Session(engine)
     today_time = datetime.now().strftime("%Y-%m-%d") 
-    
     results = session.query(
         machines.kind,
         func.count(runs.run_id)).join(runs, machines.id == runs.machine_id).filter(machines.block == block,runs.started_at.like(f"{today_time}%")
@@ -168,20 +367,3 @@ def get_todays_usage(block):
     
     session.close()
     return response
-
-
-    
-    
-           
-
-
-
-
-            
-            
-
-    
-
-    
-
-
